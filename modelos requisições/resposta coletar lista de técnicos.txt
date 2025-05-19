@@ -1,0 +1,13 @@
+HTTP/1.1 200 OK
+Date: Sun, 04 May 2025 14:40:36 GMT
+Cache-control: no-cache
+Content-type: text/json; charset=utf-8
+X-frame-options: sameorigin
+X-content-type-options: nosniff
+Strict-transport-security: max-age=31536000; includeSubDomains
+Transfer-encoding: chunked
+
+1d0
+{"message":"","EtEngrProd":[],"error":false,"success":true,"EtEngineerInfo":[{"ENGINEER_NAME":"LEANDRO GALDINO","ENGINEER":"6086039827","ASC_ENGINEER":"","SERVICE_TYPE":""},{"ENGINEER_NAME":"MARCOS LIMA DA SILVA","ENGINEER":"6086038122","ASC_ENGINEER":"","SERVICE_TYPE":""},{"ENGINEER_NAME":"MATHEUS CASTRO","ENGINEER":"6086039381","ASC_ENGINEER":"","SERVICE_TYPE":""},{"ENGINEER_NAME":"MATHEUS FARIA","ENGINEER":"6086039698","ASC_ENGINEER":"","SERVICE_TYPE":""}]}
+0
+

@@ -1,0 +1,8 @@
+HTTP/1.1 200
+Content-Type: text/plain; ISO-8859-1;charset=ISO-8859-1
+Content-Length: 373
+Date: Fri, 02 May 2025 22:05:37 GMT
+Keep-Alive: timeout=20
+Connection: keep-alive
+
+{"Sucesso": true,"DadosUltimoOTP":{"MasterOTP":"G7F6Z","DataOTP":"02-05-2025 08:31:05","IP":"192.168.25.66","Usuario":"milenasantos","LinkGetTime":"http://gspn6.samsungcsportal.com/basis/common/getChangedTime.jsp?menuId\u003dMAIN_06\u0026urlType\u003d\u0026varUrl\u003d\u0026varTarget\u003dbody","client":{"log":{"name":"org.apache.http.impl.client.DefaultHttpClient"}}}}

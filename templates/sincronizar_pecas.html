@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoMX - Sincronizar peças</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <style>
+        body {
+            background-color: #0d1b2a;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding-top: 5vh;
+        }
+        .card {
+            background-color: #B0C4DE;
+            color: #0d1b2a;
+            max-width: 500px;
+            border: none;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            padding: 2rem;
+            width: 100%;
+        }
+        .btn-custom {
+            background-color: #415a77;
+            border-color: #415a77;
+            color: #ffffff;
+            transition: background-color 0.3s ease, opacity 0.3s ease;
+        }
+        .btn-custom:hover:not(.disabled) {
+            background-color: #778da9;
+            border-color: #778da9;
+        }
+        .btn-custom.disabled {
+            background-color: #6b7280;
+            border-color: #6b7280;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .form-control {
+            background-color: #ffffff;
+            border: 1px solid #415a77;
+            color: #0d1b2a;
+            border-radius: 0.375rem;
+            padding: 0.5rem 1rem;
+        }
+        .form-control:focus {
+            box-shadow: none;
+            border-color: #ffffff;
+            outline: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes fadeOutUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .step.running .icon { animation: spin 1s linear infinite; }
+        .step.completed { animation: fadeOutUp 0.5s ease forwards; }
+        .step.entering { animation: fadeInUp 0.5s ease forwards; }
+        .notification {
+            transition: all 0.5s ease;
+            background-color: #415a77;
+            color: #ffffff;
+        }
+        .loading-icon { animation: spin 1s linear infinite; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1 class="text-2xl font-bold text-center mb-6">AutoMX - Sincronizar peças</h1>
+        <form id="osForm" class="flex gap-4 mb-6 items-center">
+            <input type="text" id="os_gspn" name="os_gspn" placeholder="Digite o número da OS" required class="form-control flex-1">
+            <div class="relative">
+                <button type="submit" id="submitBtn" class="btn-custom px-4 py-2 rounded-lg transition">Enviar</button>
+                <span id="submitLoading" class="loading-icon absolute right-[-24px] top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 hidden">
+                    <svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12a8 8 0 0116 0"></path>
+                    </svg>
+                </span>
+            </div>
+        </form>
+        <div id="progress" class="text-center"></div>
+    </div>
+    <div id="notification" class="fixed bottom-0 left-0 right-0 notification p-4 text-center opacity-0 transform translate-y-full">
+        <!-- Mensagem será inserida aqui -->
+    </div>
+
+    <script>
+        const socket = io();
+        const progressDiv = document.getElementById('progress');
+        const notification = document.getElementById('notification');
+        const submitBtn = document.getElementById('submitBtn');
+        const submitLoading = document.getElementById('submitLoading');
+        let currentStep = null;
+        let currentOS = null;
+        let isProcessing = false;
+        let completedTimeout = null;
+
+        document.getElementById('osForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (isProcessing) return;
+
+            const os_gspn = document.getElementById('os_gspn').value;
+            disableSubmitButton(true);
+            const response = await fetch('/submit_os', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ os_gspn })
+            });
+            const result = await response.json();
+            showNotification(result.message, result.status === 'success' ? 'notification' : 'notification bg-red-500');
+            if (result.status === 'success') {
+                currentOS = os_gspn;
+                document.getElementById('osForm').reset();
+            } else {
+                disableSubmitButton(false);
+            }
+        });
+
+        socket.on('progress', (data) => {
+            const { os, step, status, error } = data;
+
+            if (currentOS !== os) return;
+
+            if (currentStep && currentStep.status === 'running') {
+                currentStep.status = 'completed';
+                updateStepElement(currentStep, () => {
+                    // Se já houver um passo concluído esperando, reduza seu tempo
+                    if (completedTimeout) {
+                        clearTimeout(completedTimeout);
+                        completedTimeout = setTimeout(() => {
+                            progressDiv.innerHTML = '';
+                            showStep({ step, status, error });
+                        }, 500); // Reduz para 500ms se outro passo concluído chegar
+                    } else {
+                        completedTimeout = setTimeout(() => {
+                            progressDiv.innerHTML = '';
+                            completedTimeout = null;
+                            showStep({ step, status, error });
+                        }, 1000); // 1 segundo padrão
+                    }
+                });
+            } else {
+                showStep({ step, status, error });
+            }
+
+            if (status === 'completed' && step === 'Tudo certo') {
+                showNotification(`OS ${os} concluída com sucesso!`);
+                setTimeout(() => {
+                    currentOS = null;
+                    progressDiv.innerHTML = '';
+                    disableSubmitButton(false);
+                }, 2000);
+            } else if (status === 'failed') {
+                showNotification(`Erro na OS ${os}: ${error || 'Falha desconhecida'}`, 'notification bg-red-500');
+                disableSubmitButton(false);
+            }
+        });
+
+        function showStep({ step, status, error }) {
+            currentStep = { step, status, error };
+            const stepDiv = document.createElement('div');
+            stepDiv.className = `step ${status} entering flex items-center justify-center gap-3`;
+            stepDiv.innerHTML = `
+                <span class="icon w-6 h-6 flex-shrink-0">
+                    ${status === 'running' ? '<svg class="w-full h-full text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12a8 8 0 0116 0"></path></svg>' : 
+                      status === 'completed' ? '<svg class="w-full h-full text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' : 
+                      '<svg class="w-full h-full text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"></path></svg>'}
+                </span>
+                <span>${step}${error ? ` <span class="text-red-500">(${error})</span>` : ''}</span>
+            `;
+            progressDiv.innerHTML = '';
+            progressDiv.appendChild(stepDiv);
+        }
+
+        function updateStepElement(stepData, callback) {
+            const stepDiv = progressDiv.querySelector('.step');
+            if (stepDiv) {
+                stepDiv.className = `step ${stepData.status} flex items-center justify-center gap-3`;
+                stepDiv.querySelector('.icon').innerHTML = `
+                    ${stepData.status === 'completed' ? '<svg class="w-full h-full text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' : 
+                      '<svg class="w-full h-full text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"></path></svg>'}
+                `;
+                stepDiv.addEventListener('animationend', callback, { once: true });
+            }
+        }
+
+        function showNotification(message, className = 'notification') {
+            notification.textContent = message;
+            notification.className = `fixed bottom-0 left-0 right-0 ${className} p-4 text-center opacity-100 transform translate-y-0`;
+            setTimeout(() => {
+                notification.className = `fixed bottom-0 left-0 right-0 ${className} p-4 text-center opacity-0 transform translate-y-full`;
+            }, 3000);
+        }
+
+        function disableSubmitButton(disable) {
+            isProcessing = disable;
+            submitBtn.classList.toggle('disabled', disable);
+            submitBtn.disabled = disable;
+            submitLoading.classList.toggle('hidden', !disable);
+        }
+    </script>
+</body>
+</html>

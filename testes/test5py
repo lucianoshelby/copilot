@@ -1,0 +1,65 @@
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+import time
+
+# Configuração do Chrome com perfil do usuário
+chrome_options = Options()
+chrome_options.add_argument("user-data-dir=C:/Users/Gestão MX/AppData/Local/Google/Chrome/User Data")
+chrome_options.add_argument("profile-directory=Default")
+chrome_options.add_argument("--disable-sync")
+
+# Inicializa o WebDriver
+driver = webdriver.Chrome(options=chrome_options)
+
+try:
+    # Solicita a OS no console
+    os_input = input("Digite o número da OS do GSPN (10 dígitos): ").strip()
+    
+    # URL da OS no GSPN
+    url_gspn = f"https://biz6.samsungcsportal.com/gspn/operate.do?cmd=ZifGspnSvcMainLDCmd&objectID={os_input}#tabInfoHref"
+    driver.get(url_gspn)
+    
+    time.sleep(3)  # Aguarda carregamento da página
+
+    # 🟢 Clicar na aba "Agenda & Datas" para coletar o TOKEN_NO
+    try:
+        aba_agenda = driver.find_element(By.ID, "tdJob")
+        aba_agenda.click()
+        time.sleep(2)  # Aguarda o carregamento da aba
+        
+        token_no = driver.find_element(By.ID, "TOKEN_NO").get_attribute("value").strip()
+    except:
+        token_no = "Não encontrado"
+
+    # 🟢 Verificar se a aba "SAW" existe e coletar informações
+    saw_data = []
+    try:
+        aba_saw = driver.find_element(By.ID, "tdSAW")
+        aba_saw.click()
+        time.sleep(2)  # Aguarda o carregamento da aba
+
+        # Coletar os dados da tabela de SAW
+        tabela_saw = driver.find_element(By.ID, "divSAW")
+        linhas_saw = tabela_saw.find_elements(By.TAG_NAME, "tr")
+
+        for linha in linhas_saw[1:]:  # Pular o cabeçalho
+            try:
+                categoria = linha.find_elements(By.TAG_NAME, "td")[2].text.strip()
+                status = linha.find_elements(By.TAG_NAME, "td")[3].text.strip()
+                saw_data.append({"categoria": categoria, "status": status})
+            except:
+                continue
+
+    except:
+        saw_data = "Nenhuma informação de SAW encontrada"
+
+    # 🟢 Exibir as informações no console
+    print("\n🔹 **Informações da OS no GSPN**")
+    print(f"📌 TOKEN NO: {token_no}")
+    print(f"📌 Informações SAW: {saw_data}")
+
+finally:
+    input("\nPressione ENTER para fechar o navegador...")
+    driver.quit()
+4172074628

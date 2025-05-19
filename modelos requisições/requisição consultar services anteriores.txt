@@ -1,0 +1,22 @@
+POST https://biz6.samsungcsportal.com/gspn/operate.do HTTP/1.1
+Host: biz6.samsungcsportal.com
+Connection: keep-alive
+Content-Length: 795
+X-Prototype-Version: 1.7.2
+sec-ch-ua-platform: "Windows"
+sec-ch-ua: "Microsoft Edge";v="135", "Not-A.Brand";v="8", "Chromium";v="135"
+sec-ch-ua-mobile: ?0
+X-Requested-With: XMLHttpRequest
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0
+Accept: text/javascript, text/html, application/xml, text/xml, */*
+Content-type: application/x-www-form-urlencoded; charset=UTF-8
+Origin: https://biz6.samsungcsportal.com
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: empty
+Referer: https://biz6.samsungcsportal.com/svctracking/lite/ServiceOrderListLite.jsp?search_status=&searchContent=&menuBlock=&menuUrl=&naviDirValue=
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6
+Cookie: WMONID=N3F3AKs6pY1; visid_incap_2651221=7ytsE/1ZSS69YWKoLhRi9YWd/WcAAAAAQUIPAAAAAAAUHxTROdaZCIQUSOeySQeQ; visid_incap_2872410=ZeKJBD3DTjqmZAcqtxwKjIBUCmgAAAAAQUIPAAAAAABDN91oC7HhFE/1PAlTrClq; AMOBGSPNSESSIONID=ktOSoE-UP3I5KG3eXy6u29zjwS4kXCuSLV-rpSHHsaFoh0yIw6KW!-1634559327!-775808687; dtPC=166189029_638#click%20on%20%22Search%22%2310
+
+cmd=SvcOrderArkListCmd&objectID=&ascJobNo=&tokenNo=&ascCode=&jspName=%2Fsvctracking%2Fsvcorder%2FServiceOrderList.jsp&popup=Y&soDetailType=&MOBILE_FLAG=&asc_acctno=0002446971&asc_code=0002446971&cc_code=&service_order_no=&asc_job_no=&token_no=&status=&reason=&status1=ST035&reason1=&req_date_from1=25%2F04%2F2025&req_date_to1=02%2F05%2F2025&req_date_from=25%2F04%2F2025&req_date_to=02%2F05%2F2025&status2=&reason2=&DEALER_JOB_NO=&service_type=&model=SM-A536EZKSZTO&SUB_SVC_TYPE3=&SUB_SVC_TYPE=&serial_no=RXCTA0D1RYL&imei=&CONSUMER=&appt_date_from=&appt_date_to=&dateType_from=25%2F04%2F2025&dateType_to=02%2F05%2F2025&engineer=&voc_flag=&b2b_flag=&ZSVC_LEVEL=&product=&LOCAL_PRODUCT=&wty_flag=&wty_type=&OBJECT_ID_FROM=&OBJECT_ID_TO=&redo_flag=&VANID=&PV_RESULT=&FEEDBACK_STATUS=&high_risk_flag=

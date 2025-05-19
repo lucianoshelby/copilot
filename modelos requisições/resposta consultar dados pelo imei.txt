@@ -1,0 +1,13 @@
+HTTP/1.1 200 OK
+Date: Fri, 02 May 2025 22:58:16 GMT
+Cache-control: no-cache
+Content-type: text/json; charset=utf-8
+X-frame-options: sameorigin
+X-content-type-options: nosniff
+Strict-transport-security: max-age=31536000; includeSubDomains
+Transfer-encoding: chunked
+
+2f9
+{"model":"SM-S901EIDRZTO","data":"Y:SM-S901E/DS:354103135764524:RXCTA0B762N:20221031:BR:SM-S901EIDRZTO:SEDAM:20221118:BR:SM-S901EIDRZTO:E:354103135764524","unNum":"","exportDate":"","wtyException":"","prodCompany":"","do_num":"-(-)","productDate":"","wpImei":"-","slaveImei":"355496405764524","returnCode":"Y","error":false,"prodCompanyCd":"","SKU":"SM-S901EIDRZTO","isExistSalesModel":"Y","sales_buyercode":"ZTA","countryCode":"","thirdImei":"-","overseas":"N","returnMessage":"SM-S901E/DS:354103135764524:RXCTA0B762N:20221031:BR:SM-S901EIDRZTO:SEDAM:20221118:BR:SM-S901EIDRZTO:E:354103135764524","country":"","isSameBetweenSalesAndManufacturing":"Y","isCorrectInputIMEI":true,"masterNum":"354103135764524","serial":"RXCTA0B762N","success":true,"isWifi":false}
+0
+

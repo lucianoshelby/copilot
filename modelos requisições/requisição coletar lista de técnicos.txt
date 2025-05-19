@@ -1,0 +1,22 @@
+POST https://biz6.samsungcsportal.com/gspn/operate.do?IV_F4_FLAG=X&IV_PROD_AUTH=X HTTP/1.1
+Host: biz6.samsungcsportal.com
+Connection: keep-alive
+Content-Length: 1687
+X-Prototype-Version: 1.7.2
+sec-ch-ua-platform: "Windows"
+sec-ch-ua: "Microsoft Edge";v="135", "Not-A.Brand";v="8", "Chromium";v="135"
+sec-ch-ua-mobile: ?0
+X-Requested-With: XMLHttpRequest
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0
+Accept: text/javascript, text/html, application/xml, text/xml, */*
+Content-type: application/x-www-form-urlencoded; charset=UTF-8
+Origin: https://biz6.samsungcsportal.com
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: empty
+Referer: https://biz6.samsungcsportal.com/gspn/operate.do?cmd=ZifGspnSvcMainLDCmd&objectID=4172879968
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6
+Cookie: WMONID=N3F3AKs6pY1; visid_incap_2651221=7ytsE/1ZSS69YWKoLhRi9YWd/WcAAAAAQUIPAAAAAAAUHxTROdaZCIQUSOeySQeQ; visid_incap_2872410=ZeKJBD3DTjqmZAcqtxwKjIBUCmgAAAAAQUIPAAAAAABDN91oC7HhFE/1PAlTrClq; incap_ses_948_2651221=MsCiO/C/XRHApFxaSfknDdFtFWgAAAAA4WKTQknPiUSGg0xyXRSRSA==; incap_ses_1571_2651221=4m70YY+OPDIeR7tag1DNFdJtFWgAAAAAcpigIDmqm0F9auI4Ig1M9w==; incap_ses_1585_2651221=5EtAMeINgCdCnY1faQ3/FdRtFWgAAAAA59p2UhoypcnXH1sNdp3nGQ==; AMOBGSPNSESSIONID=o42bdTuDyzfAhe_4FE3hPu6RwmNwYEYxfHAxPkmP9lLFX8L7UjAF!-1634559327!-775808687; dtPC=312056276_825#Generic%20XHR
+
+openTabID=&jobServiceType=CI&SOLASTCHANGEDDATE=20250502&SOLASTCHANGEDTIME=214417&STATE2=&LAST_APP_DATE=&frYear=&toYear=&frMonth=&toMonth=&IV_PARTS_CODE=&IV_DATE=20250502&fromListButton=&SAWPART=GH82-28024A&PART_SERIAL=&PART_TERM=O&SAWPART=GH82-28027A&PART_SERIAL=&PART_TERM=O&SAWPART=GH02-23641A&PART_SERIAL=&PART_TERM=O&soDetailType=&jspName=&dataChange=&p_listCall=X&cmd=EngineerSearchCmd&objectID=4172879968&gi_ASC_JOB_NO=ALEATORIOASC&assignedFlag=X&ascCode=0002446971&customerCode=6074363045&msg_seqno=&msgGuid=&msgText=&isawNo=&partsUsed=&wtyInOut=OW&IV_OBJKEY=&file_name=&fileSize=&Ctype=SVC_IND&Code=&MODEL=SM-A536EZKSZTO&SERIAL=RXCTA0D1RYL&IMEI=350603382527791&PRODUCT_DATE=20221001&SYMPTOM_CAT1=&SYMPTOM_CAT2=&SYMPTOM_CAT3=&claimno=&wty_err_flag=&MBLNR=&MJAHR=&gi_material=&gi_qty=&gi_seq_no=&gi_engineer=&gi_engineer_nm=&gi_postingFlag=&gi_partWty=&cancelFlag=&svcPrcd=THB02&quotationFlag=&billingSearch=&hasWtyBilling=&model_p=&serialNo_p=&ASC_CODE_p=&IV_OBJECT_ID=4172879968&interMessageType=&IRIS_CONDI=&IRIS_SYMPT=&IRIS_DEFECT=&IRIS_REPAIR=&IRIS_CONDI_DESC=&IRIS_SYMPT_DESC=&IRIS_DEFECT_DESC=&IRIS_REPAIR_DESC=&RetailInstallation=&additionalGasChargeForDVM=&canRedoMinorOption=&sameSAWCatCode=&canExtraPersonOption=&canExtraMileageHAOption=&sawExistCompressorSerialApproved=&sawExistSerialNoValidationApproved=&sawExistReverseVoidApproved=false&highRisk=&defectType=&svcProd=&sawExistLabor=false&bosFlag=&AUTH_GR=&PURCHASE_PLACE=&SAW_CATEGORY=&REASON=&currStatus=ST030&autoDo=&cicProd=HHP&hqSvcProd=THBB6&ewpYn=&butlerX=&butlerXMsg=&sawExtraMileageApproved=false&relatedTicketAscCode=&mesChkFlag=&month=&IV_SAW_INCL_FLAG=X&curSvcType=CI&irnExist=&zzuniqueId=&IV_INOUTWTY=OW

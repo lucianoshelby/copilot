@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demonstração Layout AutoMX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilo para garantir altura total e evitar rolagem do body */
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden; /* Previne rolagem do body */
+            background-color: #f3f4f6; /* Fundo geral cinza claro */
+        }
+        /* Altura total para o container principal */
+        .main-container {
+            height: 100vh; /* Altura total da viewport */
+            display: flex;
+        }
+        /* Permitir rolagem interna nas colunas se necessário */
+        .sidebar-nav, .main-content, .task-monitor {
+            overflow-y: auto; /* Adiciona rolagem se conteúdo exceder */
+            height: 100vh; /* Garante que a rolagem funcione dentro da altura total */
+        }
+         /* Estilos customizados para os cards de tarefa */
+        .task-card {
+            border-left-width: 4px;
+        }
+        .task-card.status-processing { border-left-color: #3b82f6; } /* Azul */
+        .task-card.status-completed { border-left-color: #10b981; } /* Verde */
+        .task-card.status-failed { border-left-color: #ef4444; }    /* Vermelho */
+        .task-card.status-queued { border-left-color: #f59e0b; }     /* Ambar */
+    </style>
+</head>
+<body class="antialiased text-gray-800">
+
+    <div class="main-container flex">
+
+        <aside class="sidebar-nav w-64 bg-gray-800 text-gray-100 p-4 flex flex-col flex-shrink-0">
+            <div class="text-2xl font-bold mb-6 text-center border-b border-gray-700 pb-4">
+                Auto<span class="text-blue-400">MX</span>
+            </div>
+            <nav class="flex-grow">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#" class="flex items-center px-3 py-2 rounded hover:bg-gray-700 bg-gray-700 font-semibold"> <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            Vincular/Finalizar OS
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center px-3 py-2 rounded hover:bg-gray-700">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 12L3 8m4 4l4-8m-4 8l4 8M21 12H9"></path></svg>
+                            Sincronizar Peças
+                        </a>
+                    </li>
+                     <li>
+                        <a href="#" class="flex items-center px-3 py-2 rounded hover:bg-gray-700">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                             Requisitar Peças
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center px-3 py-2 rounded hover:bg-gray-700">
+                           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            Solicitar SAW
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center px-3 py-2 rounded hover:bg-gray-700">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                            Logins COS
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="mt-auto pt-4 border-t border-gray-700">
+                 <p class="text-xs text-gray-500 text-center">&copy; 2025 Sua Empresa</p>
+            </div>
+        </aside>
+
+        <main class="main-content flex-1 bg-gray-100 p-6 lg:p-8">
+            <h1 class="text-2xl lg:text-3xl font-semibold text-gray-900 mb-6">Vincular / Finalizar OS GSPN</h1>
+
+            <div class="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto">
+                <form class="space-y-6">
+                    <div>
+                        <label for="vincularOsNumber" class="block text-sm font-medium text-gray-700 mb-1">Número da OS (COS)</label>
+                        <input type="text" id="vincularOsNumber" name="vincularOsNumber" placeholder="Digite a OS do COS sem espaços" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        <p class="text-xs text-gray-500 mt-1">Obrigatório.</p>
+                    </div>
+
+                    <div class="space-y-4 border-t border-b border-gray-200 py-4">
+                        <h2 class="text-lg font-semibold text-gray-800 text-center mb-3">Ações a Realizar</h2>
+
+                        <label class="flex items-center justify-between cursor-pointer p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                            <span class="font-medium text-gray-700">Gerar nova OS GSPN</span>
+                            <div class="relative">
+                                <input type="checkbox" id="toggleGerarOs" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center justify-between cursor-pointer p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                            <span class="font-medium text-gray-700">Sincronizar peças (Nova OS)</span>
+                            <div class="relative">
+                                <input type="checkbox" id="toggleSincronizar" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center justify-between cursor-pointer p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                            <span class="font-medium text-gray-700">Requisitar peças do orçamento (Nova OS)</span>
+                            <div class="relative">
+                                <input type="checkbox" id="toggleRequisitar" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </div>
+                        </label>
+
+                         <label class="flex items-center justify-between cursor-pointer p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                            <span class="font-medium text-gray-700">Finalizar OS Atual (GSPN)</span>
+                            <div class="relative">
+                                <input type="checkbox" id="toggleFinalizar" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div>
+                        <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Executar Ações
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </main>
+
+        <aside class="task-monitor w-72 bg-white border-l border-gray-200 p-4 flex-shrink-0">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Tarefas em Andamento</h2>
+
+            <div class="space-y-3">
+                <div class="task-card status-processing bg-blue-50 p-3 rounded-md shadow-sm flex items-start space-x-3">
+                    <div class="flex-shrink-0 pt-1">
+                        <svg class="w-5 h-5 text-blue-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9M4 4L9 9m11 11v-5h-.581m-15.357-2A8.001 8.001 0 0019.418 15M19 19l-5-5"></path></svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-700">Sincronizar OS: <span class="font-bold">1234567</span></p>
+                        <p class="text-xs text-gray-500">Verificando peças no GSPN...</p>
+                    </div>
+                </div>
+
+                 <div class="task-card status-queued bg-amber-50 p-3 rounded-md shadow-sm flex items-start space-x-3">
+                     <div class="flex-shrink-0 pt-1">
+                         <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                     </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-700">Requisitar Peças OS: <span class="font-bold">987654</span></p>
+                        <p class="text-xs text-gray-500">Aguardando na fila...</p>
+                    </div>
+                </div>
+
+                <div class="task-card status-completed bg-green-50 p-3 rounded-md shadow-sm flex items-start space-x-3 group">
+                     <div class="flex-shrink-0 pt-1">
+                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                     </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-700">Vincular OS: <span class="font-bold">555111</span></p>
+                        <p class="text-xs text-gray-500">OS GSPN <span class="font-semibold">GSPN777</span> gerada.</p>
+                    </div>
+                    <button class="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                    </button>
+                </div>
+
+                 <div class="task-card status-failed bg-red-50 p-3 rounded-md shadow-sm flex items-start space-x-3 group">
+                     <div class="flex-shrink-0 pt-1">
+                         <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                     </div>
+                     <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-700">Solicitar SAW OS: <span class="font-bold">333222</span></p>
+                        <p class="text-xs text-red-600">Falha: Login GSPN inválido.</p>
+                    </div>
+                     <button class="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                    </button>
+                </div>
+
+            </div>
+
+        </aside>
+
+    </div>
+
+</body>
+</html>
