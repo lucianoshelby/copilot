@@ -6,7 +6,8 @@ from login_gspn.cookies_manager import obter_cookies_validos_recentes
 from master_otp import get_master_otp
 import requests
 import json
-
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 
@@ -42,7 +43,7 @@ def consultar_dados_produto(cookies, identificador: str) -> dict | None:
     if not master_otp:
         print("Erro: Falha ao obter o Master OTP necessário para a consulta.")
         return None
-    print(f"Master OTP obtido: {master_otp}")
+    #print(f"Master OTP obtido: {master_otp}")
 
     # 2. Configurar a requisição para GSPN
     api_url = "https://biz6.samsungcsportal.com/gspn/operate.do"
@@ -414,3 +415,73 @@ def verificar_garantia(cookies, dados_produto: dict) -> dict | None:
 
     return None # Retorna None em caso de qualquer erro não tratado acima
 
+def obter_data_compra_por_imei(imei: str, cookies) -> str | None:
+    """
+    Retorna a data de compra do produto a partir do IMEI, 
+    garantindo que o local_svc_prod seja obtido.
+    
+    Args:
+        imei (str): IMEI do produto.
+    
+    Returns:
+        str | None: Data de compra no formato 'YYYYMMDD', ou None se não encontrado.
+    """
+    #cookies = obter_cookies_validos_recentes()
+
+    # Etapa 1: Consultar dados do produto
+    dados_produto = consultar_dados_produto(cookies, imei)
+    if not dados_produto:
+        print("Falha ao obter dados do produto.")
+        return None
+
+    # Etapa 2: Consultar descrição do modelo para garantir local_svc_prod
+    if dados_produto.get("modelo_completo"):
+        dados_modelo = consultar_descricao_modelo(cookies, dados_produto["modelo_completo"])
+        if dados_modelo and "local_svc_prod" in dados_modelo:
+            dados_produto["local_svc_prod"] = dados_modelo["local_svc_prod"]
+        else:
+            print("Falha ao obter local_svc_prod.")
+            return None
+    else:
+        print("Modelo completo não encontrado nos dados do produto.")
+        return None
+
+    # Etapa 3: Consultar garantia (onde vem a data de compra)
+    dados_garantia = verificar_garantia(cookies, dados_produto)
+    if not dados_garantia:
+        print("Falha ao verificar garantia.")
+        return None
+
+    # Extrair a data de compra
+    return dados_garantia.get("purchase_date")
+
+# Exemplo de uso
+if __name__ == "__main__":
+
+    CAMINHO_ARQUIVO = r"C:\\Users\\Gestão MX\\Documents\\Copilot\\imei.txt"
+    resultado = {}
+    cookies = obter_cookies_validos_recentes()
+    with open(CAMINHO_ARQUIVO, 'r') as arquivo:
+        for linha in arquivo:
+            imei = linha.strip()
+            if imei:
+                data_compra = obter_data_compra_por_imei(imei, cookies)
+                if data_compra:
+                    print(f"IMEI: {imei}, Data de Compra: {data_compra}")
+                    resultado[imei] = data_compra
+
+                else:
+                    print(f"IMEI: {imei}, Data de Compra não encontrada.")
+                    resultado[imei] = None
+        for imei, data in resultado.items():
+            print(f"IMEI: {imei}, Data de Compra: {data}")
+
+
+
+
+
+        
+
+
+
+ 

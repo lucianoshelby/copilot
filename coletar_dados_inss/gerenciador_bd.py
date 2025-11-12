@@ -5,6 +5,7 @@ from psycopg2 import sql # Para construir queries SQL de forma segura, se necess
 from psycopg2.extras import DictCursor # Para retornar linhas como dicionários
 import json # Para parsear a string JSON de produtos
 import base64 # Para decodificar a senha do banco de dados
+import os
 
 # --- Configurações do Banco de Dados ---
 # Mantenha suas credenciais seguras. Em um projeto real, use variáveis de ambiente.

@@ -59,7 +59,13 @@ def aplicar_reparo_completo_remontagem(numero_os):
                 print(f"Removendo peças GSPN")
                 pecas_cos = coletar_usadas_cos(dados_full)
                 dados_full.update(pecas_cos) # Atualiza os dados_full com as peças COS
-                remover_pecas_os(dados_full)# Remove as peças GSPN da OS
+                sucesso = remover_pecas_os(dados_full)# Remove as peças GSPN da OS
+                if sucesso:
+                    print("Peças GSPN removidas com sucesso!")
+                else:
+                    print("Erro ao remover peças GSPN.")
+                    return False
+
                 #time.sleep(2) 
             else:
                 print(f"Não foram encontradas peças GSPN para remover.")
@@ -673,11 +679,11 @@ def aplica_ag_custo_gspn(numero_os):
                 print(f"  Modificando {key}: '{original_value}' -> '{final_value}'")
                 modificacoes_feitas += 1
         elif key == "WTY_EXCEPTION":
-            final_value = "VOID3"
-            if original_value == "":
-                 print(f"  Modificando {key}: '{original_value}' -> '{final_value}'")
-                 modificacoes_feitas += 1
-        elif key == "LAST_APP_TIME_DY_STT":
+                final_value = "VOID3"
+                if original_value == "":
+                    print(f"  Modificando {key}: '{original_value}' -> '{final_value}'")
+                    modificacoes_feitas += 1
+        if key == "LAST_APP_TIME_DY_STT":
             final_value = hora_atual
             if original_value != final_value:
                  print(f"  Modificando {key}: '{original_value}' -> '{final_value}'")
@@ -772,3 +778,273 @@ def aplica_ag_custo_gspn(numero_os):
     except Exception as e:
         print(f"Um erro inesperado ocorreu durante a modificação da OS: {e}")
         return False
+    
+def finalizar_orcamento_reprovado(numero_os):
+    """
+    Fecha uma Ordem de Serviço (OS) como "sem reparo" (remontagem) no portal GSPN.
+
+    Args:
+        numero_os (str): O número da Ordem de Serviço a ser fechada.
+
+    Returns:
+        bool: True se a requisição foi enviada e a resposta indica sucesso,
+              False caso contrário.
+    """
+    print(f"\n=== Iniciando Fechamento Sem Reparo para OS: {numero_os} ===")
+
+
+
+    # 2. Obter Payload Base
+    # Substitua 'montar_payload' pela sua função real!
+    
+    dados_full = montar_payload(numero_os)
+    cookies = dados_full.get('cookies')
+    payload_original = dados_full.get('payload_os_full')
+    garantia = None
+    for chave, valor in payload_original:
+        if chave == "IN_OUT_WTY":
+            print(f"Valor de IN_OUT_WTY: {valor}")
+
+            if valor == "LP":
+
+                try:
+                    print("Mudando para Out Of Warranty (OW)...")
+                    mudar_pra_ow(dados_full)# Muda a OS para Out Of Warranty (OW) se necessário
+                except Exception as e:
+                    print(f"Erro ao mudar para OW: {e}")
+                    
+    dados_os = extract_os_data_full(dados_full) # Coleta os dados da OS
+    dados_full.update(dados_os) # Atualiza os dados_full dados da OS
+    pecas_gspn = dados_full.get('parts')
+    #print(f'Peças GSPN: {pecas_gspn}')
+    try:
+        if pecas_gspn:
+            parts_to_remove = coletar_pecas_gspn_total(dados_full)
+            print(f"Peças GSPN a serem removidas: {parts_to_remove}")
+            dados_full['parts_to_remove'] = parts_to_remove # Adiciona as partes a serem removidas ao dicionário
+            if parts_to_remove:
+                print(f"Removendo peças GSPN")
+                pecas_cos = coletar_usadas_cos(dados_full)
+                dados_full.update(pecas_cos) # Atualiza os dados_full com as peças COS
+                remover_pecas_os(dados_full)# Remove as peças GSPN da OS
+                #time.sleep(2) 
+            else:
+                print(f"Não foram encontradas peças GSPN para remover.")
+
+    except Exception as e:
+        print(f"Erro ao coletar peças GSPN: {e}")
+
+
+    if not payload_original:
+        print(f"Falha no fechamento: Não foi possível montar o payload base para a OS {numero_os}.")
+        return False
+    print('Verificando anexos...')
+    resultado_anexos = checar_e_anexar_obrigatorios(dados_full)
+    if resultado_anexos:
+        print("Anexos verificados com sucesso.")
+    else:
+        print("Falha na verificação de anexos. Tentando prosseguir sem verificar.")
+        
+
+    # 3. Definir Modificações e Valores Atuais
+    modificacoes_fixas = {
+        "STATUS": "ST035",
+        "REASON": "HL005",
+        "REPAIR_DESC": "ORCAMENTO REPROVADO",
+        "IRIS_CONDI": "1",
+        "LAB_TYPE": "SP",
+        "IRIS_SYMPT_QCODE": "SRC012",
+        "IRIS_SYMPT": "T12",
+        "IRIS_REPAIR_QCODE": "SRC005",
+        "IRIS_REPAIR": "X09",
+        "IN_OUT_WTY": "OW"
+    }
+
+
+    data_atual = now_local.strftime('%d/%m/%Y')
+    hora_atual = now_local.strftime('%H:%M:%S')
+
+
+    # 4. Construir Payload Modificado
+    payload_modificado = []
+    campo_asc_job_no_encontrado = False
+    campo_wty_exception_encontrado = False
+    print('Atualizando payload...')
+    payload_atualizado = montar_payload(numero_os) # Atualiza o payload com os dados mais recentes
+    payload_original = payload_atualizado.get('payload_os_full') # Obtém o payload atualizadoS
+    for key, original_value in payload_original:
+        final_value = original_value # Valor padrão é o original
+
+        # Aplica modificações fixas
+        if key in modificacoes_fixas:
+            final_value = modificacoes_fixas[key]
+            print(f"  Modificando {key}: '{original_value}' -> '{final_value}'")
+        # Aplica data/hora
+        elif key == "SERVICE_DATE":
+            final_value = data_atual
+            print(f"  Modificando {key}: '{original_value}' -> '{final_value}'")
+        elif key == "SERVICE_TIME":
+            final_value = hora_atual
+            print(f"  Modificando {key}: '{original_value}' -> '{final_value}'")
+        # Aplica regra WTY_EXCEPTION
+        elif key == "WTY_EXCEPTION":
+            campo_wty_exception_encontrado = True
+            if not original_value: # Se o valor original for vazio ou None
+                final_value = "VOID3"
+                print(f"  Modificando {key}: '{original_value}' -> '{final_value}' (era vazio)")
+            else:
+                final_value = original_value # Mantém se não era vazio
+        # Aplica regra ASC_JOB_NO
+        elif key == "ASC_JOB_NO":
+            campo_asc_job_no_encontrado = True
+            # Verifica condição: (inicia com '3' e tem 6 dígitos) OU (inicia com 'FG' e tem 8 dígitos)
+            if (original_value and isinstance(original_value, str) and
+                    ((original_value.startswith('3') and len(original_value) == 6 and original_value.isdigit()) or \
+                     (original_value.startswith('FG') and len(original_value) == 8))):
+                final_value = numero_os
+                print(f"  Modificando {key}: '{original_value}' -> '{final_value}' (condição atendida)")
+            else:
+                final_value = original_value # Mantém se a condição não for atendida
+                print(f"  Mantendo {key}: '{original_value}' (condição NÃO atendida)")
+
+        # Adiciona a tupla (chave, valor_final) à nova lista
+        payload_modificado.append((key, final_value))
+
+    # Verificações de segurança (se campos chave para regras foram encontrados)
+    if not campo_asc_job_no_encontrado:
+         print("Aviso: Campo 'ASC_JOB_NO' não encontrado no payload base.")
+    if not campo_wty_exception_encontrado:
+         print("Aviso: Campo 'WTY_EXCEPTION' não encontrado no payload base.")
+
+    # 5. Preparar e Enviar Requisição
+    target_url = "https://biz6.samsungcsportal.com/gspn/operate.do"
+    # Constrói o Referer dinamicamente
+    referer_url = f"https://biz6.samsungcsportal.com/gspn/operate.do?cmd=ZifGspnSvcMainLDCmd&objectID={numero_os}"
+
+    headers = {
+        'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-Prototype-Version': '1.7.2', # Presente na requisição de exemplo
+        'Origin': 'https://biz6.samsungcsportal.com',
+        'Referer': referer_url,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0',
+        'Accept': 'text/javascript, text/html, application/xml, text/xml, */*',
+        'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
+        'Accept-Encoding': 'gzip, deflate, br, zstd',
+        'Sec-Fetch-Site': 'same-origin',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Dest': 'empty',
+        # sec-ch-* headers omitidos, adicione se necessário
+    }
+
+    try:
+        print("\nEnviando requisição para fechar OS sem reparo...")
+        response = requests.post(
+            target_url,
+            headers=headers,
+            cookies=cookies,
+            data=payload_modificado,
+            verify=False 
+        )
+        print(f"Status Code Fechamento: {response.status_code}")
+        response.raise_for_status() # Verifica erro HTTP
+
+        # 6. Processar Resposta
+        try:
+            # Limpa a resposta (similar à função de confirmação)
+            response_text_clean = response.text.strip()
+            if response_text_clean and response_text_clean[0] != '{':
+                 json_start_index = response_text_clean.find('{')
+                 if json_start_index != -1:
+                      response_text_clean = response_text_clean[json_start_index:]
+                 if response_text_clean.endswith('\n0'):
+                     response_text_clean = response_text_clean[:-2].strip()
+
+            fechamento_data = json.loads(response_text_clean)
+            print(f"Resposta do Fechamento (JSON): {fechamento_data}")
+
+            # Verifica sucesso
+            if fechamento_data.get("success") is True:
+                print(f"Fechamento da OS {numero_os} bem-sucedido!")
+                return True
+            else:
+                print(f"Falha no fechamento indicada pela resposta: {fechamento_data.get('returnMessage', 'Sem mensagem de erro')}")
+                return False
+
+        except json.JSONDecodeError as json_err:
+            print(f"Erro ao decodificar JSON da resposta de fechamento: {json_err}")
+            print(f"Texto da resposta recebida: {response.text}")
+            return False
+
+    except requests.exceptions.RequestException as req_err:
+        print(f"Erro na requisição de fechamento: {req_err}")
+        if hasattr(req_err, 'response') and req_err.response is not None:
+                print(f"Response Status: {req_err.response.status_code}")
+        return False
+    except Exception as e:
+        print(f"Um erro inesperado ocorreu durante o fechamento da OS: {e}")
+        return False
+
+def deletar_todas_as_pecas(numero_os):
+    """
+    Deleta todas as peças de uma OS no portal GSPN.
+
+    Args:
+        numero_os (str): O número da Ordem de Serviço a ser fechada.
+
+    Returns:
+        bool: True se a requisição foi enviada e a resposta indica sucesso,
+              False caso contrário.
+    """
+    print(f"\n=== Iniciando Fechamento Sem Reparo para OS: {numero_os} ===")
+
+
+
+    # 2. Obter Payload Base
+    # Substitua 'montar_payload' pela sua função real!
+    
+    dados_full = montar_payload(numero_os)
+    cookies = dados_full.get('cookies')
+    payload_original = dados_full.get('payload_os_full')
+    garantia = None
+    for chave, valor in payload_original:
+        if chave == "IN_OUT_WTY":
+            print(f"Valor de IN_OUT_WTY: {valor}")
+
+            if valor == "LP":
+
+                try:
+                    print("Mudando para Out Of Warranty (OW)...")
+                    mudar_pra_ow(dados_full)# Muda a OS para Out Of Warranty (OW) se necessário
+                except Exception as e:
+                    print(f"Erro ao mudar para OW: {e}")
+                    
+    dados_os = extract_os_data_full(dados_full) # Coleta os dados da OS
+    dados_full.update(dados_os) # Atualiza os dados_full dados da OS
+    pecas_gspn = dados_full.get('parts')
+    #print(f'Peças GSPN: {pecas_gspn}')
+    try:
+        if pecas_gspn:
+            parts_to_remove = coletar_pecas_gspn_total(dados_full)
+            print(f"Peças GSPN a serem removidas: {parts_to_remove}")
+            dados_full['parts_to_remove'] = parts_to_remove # Adiciona as partes a serem removidas ao dicionário
+            if parts_to_remove:
+                print(f"Removendo peças GSPN")
+                pecas_cos = coletar_usadas_cos(dados_full)
+                dados_full.update(pecas_cos) # Atualiza os dados_full com as peças COS
+                sucesso = remover_pecas_os(dados_full)# Remove as peças GSPN da OS
+                if sucesso:
+                    print("Peças GSPN removidas com sucesso!")
+                else:
+                    print("Erro ao remover peças GSPN.")
+                    return False
+
+
+                #time.sleep(2) 
+            else:
+                print(f"Não foram encontradas peças GSPN para remover.")
+
+    except Exception as e:
+        print(f"Erro ao coletar peças GSPN: {e}")
+        return False
+    return True

@@ -6,8 +6,7 @@ import sys
 sys.path.insert(0, 'C:\\Users\\Gestão MX\\Documents\\Copilot')
 from automacoes.coletar_dados import fetch_os_data
 
-data_atual = datetime.now().strftime('%Y%m%d')
-hora_gmt0 = datetime.now(timezone(timedelta(hours=-3))).strftime('%H%M%S')
+
 def montar_payload(object_id):
     """
     Monta o payload para a requisição HTTP mantendo a ordem dos campos
@@ -23,6 +22,8 @@ def montar_payload(object_id):
     Returns:
         OrderedDict com o payload completo
     """
+    data_atual = datetime.now().strftime('%Y%m%d')
+    hora_gmt0 = datetime.now(timezone(timedelta(hours=-3))).strftime('%H%M%S')
     dados_full = fetch_os_data(object_id)
     html_content = dados_full['html_os']
     cookies = dados_full['cookies']
@@ -143,7 +144,7 @@ def montar_payload(object_id):
         ("IRIS_REPAIR_QCODE", soup.find("input", {"id": "SAVED_IRIS_REPAIR_QCODE"}).get("value", "")),
         ("SAVED_IRIS_REPAIR_QCODE", soup.find("input", {"id": "SAVED_IRIS_REPAIR_QCODE"}).get("value", "")),
         ("IRIS_REPAIR", soup.find('select', {'id': 'IRIS_REPAIR'}).find('option', selected=True)['value'] if soup.find('select', {'id': 'IRIS_REPAIR'}).find('option', selected=True) else ""),
-        ("REP_TYPE",  "CI"), #extract_js_variable(soup, "_l.REP_TYPE")) or
+        ("REP_TYPE",  soup.find('select', {'id': 'SERVICE_TYPE'}).find('option', selected=True)['value'] if soup.find('select', {'id': 'SERVICE_TYPE'}).find('option', selected=True) else "CI"), #extract_js_variable(soup, "_l.REP_TYPE")) or
         ("SVC_INDICATOR", extract_js_variable(soup, "_l.SVC_INDICATOR") or ""),
         ("QNA_CODE", soup.find("input", {"id": "QNA_CODE"}).get("value", "")),
         ("GAS_CHARGE", extract_js_variable(soup, "_l.GAS_CHARGE") or ""),
@@ -264,7 +265,7 @@ def montar_payload(object_id):
         ("CALL_ATTEMPT2_TM", ""),
         ("CALL_ATTEMPT3_DT", ""),
         ("CALL_ATTEMPT3_TM", ""),
-        ("NEW_FIRMWARE", ""),
+        ("NEW_FIRMWARE", "3130.1"),
         ("UNIT_LOC", ""),
         ("TOKEN_NO", extract_js_variable(soup, "_l.TOKEN_NO") or extract_js_variable(soup, "_l.ObjectId")),
         ("NEW_MODEL", extract_js_variable(soup, "_l.NEW_MODEL") or ""),
@@ -525,7 +526,7 @@ def obter_dados_saw(object_id, cookies=None):
             
             # Se não encontramos inputs hidden na tabela, retornamos lista vazia
             if not hidden_inputs:
-                print("Inputs hidden SAW_STATUS e SAW_CATEGORY não encontrados")
+                #print("Inputs hidden SAW_STATUS e SAW_CATEGORY não encontrados")
                 return []
             
             # Agrupamos os campos por pares (SAW_STATUS e SAW_CATEGORY)
@@ -556,6 +557,8 @@ def obter_dados_saw(object_id, cookies=None):
 def pl_deletar_pecas(dados_full):
     html_content = dados_full['html_os']
     soup = BeautifulSoup(html_content, 'html.parser')
+    data_atual = datetime.now().strftime('%Y%m%d')
+    hora_gmt0 = datetime.now(timezone(timedelta(hours=-3))).strftime('%H%M%S')
     
     payload = {
         "openTabID": "",

@@ -798,6 +798,205 @@ def ajustar_estq_asc(dados_full):
 def manusear_gi(dados_full, cancelar_gi=None):
     """
     Realiza o posting ou cancelamento de G/I para peças em used_parts_cos ou lista específica.
+    Adiciona prints para debug no console.
+    """
+    print(f"[INFO] Iniciando manusear_gi | Modo cancelamento: {cancelar_gi is not None}")
+    #print(f"[DEBUG] Estado inicial de dados_full: {json.dumps(dados_full, indent=2, default=str)}")
+
+    cookies = dados_full.get("cookies")
+    used_parts_cos = dados_full.get("used_parts_cos")
+    parts = dados_full.get("parts", {})
+    in_out_wty = dados_full.get("in_out_wty")
+    asc_job_no = dados_full.get("asc_job_no")
+    object_id = dados_full.get("object_id")
+    engineer = dados_full.get("engineer")
+    user_id = dados_full.get("user_id")
+
+    # Verificação de campos obrigatórios
+    required_fields = {
+        "cookies": cookies, "used_parts_cos": used_parts_cos, "in_out_wty": in_out_wty,
+        "asc_job_no": asc_job_no, "object_id": object_id, "engineer": engineer, "user_id": user_id
+    }
+    missing_fields = [field for field, value in required_fields.items() if not value]
+    if missing_fields:
+        error_msg = f"[ERRO] Campos obrigatórios ausentes: {', '.join(missing_fields)}"
+        print(error_msg)
+        dados_full["error"] = error_msg
+        return dados_full
+
+    if not used_parts_cos and not cancelar_gi:
+        print("[INFO] Nenhuma peça encontrada em used_parts_cos e cancelar_gi não especificado.")
+        dados_full["gi_posted"] = []
+        return dados_full
+
+    url = "https://biz6.samsungcsportal.com/gspn/operate.do"
+    referer = "https://biz6.samsungcsportal.com/svctracking/svcorder/SVCPopGiPosting.jsp"
+    headers = create_headers(referer)
+
+    payload_base = {
+        "cmd": "ServiceOrderGiPostingCmd",
+        "ascCode": "0002446971",
+        "PARTS_CODE": "",
+        "IV_IMEI": "",
+        "PARTS_QTY": "1",
+        "GI_FLAG": "Y",
+        "ENGINEER_CODE": engineer,
+        "objectID": object_id,
+        "SEQ_NO": "",
+        "ASC_JOB_NO": asc_job_no,
+        "IN_OUT_WTY": "",
+        "IV_ASC_ACCTNO": "0002446971",
+        "IV_INOUT": "I",
+        "IV_WTY_INOUT": in_out_wty,
+        "GI_DATE": datetime.now().strftime("%Y%m%d"),
+        "giDocNo": "",
+        "fiscalYear": "",
+        "userId": user_id,
+        "IV_LIMIT_FLAG": "",
+        "TRY_CNT": "1",
+        "IV_SO_NO": "",
+        "IV_AUTO_DO": ""
+    }
+
+    gi_posted = []
+
+    def tentar_postar_pecas(pecas_a_processar):
+        corrigir_delivery = []
+        local_gi_posted = []
+        
+        for parts_code in pecas_a_processar:
+            print(f"\n[INFO] Processando peça: {parts_code}")
+
+            if cancelar_gi is not None:
+                if parts_code not in parts or "gi_date" not in parts[parts_code]:
+                    print(f"[WARN] Peça {parts_code} não tem G/I ou gi_date para cancelar. Ignorando.")
+                    continue
+                payload = payload_base.copy()
+                payload["PARTS_CODE"] = parts_code
+                payload["PARTS_QTY"] = str(used_parts_cos[parts_code]["quantidade"])
+                payload["SEQ_NO"] = parts[parts_code]["seq_no"]
+                payload["GI_FLAG"] = "N"
+                payload["IV_INOUT"] = "O"
+                payload["GI_DATE"] = parts[parts_code]["gi_date"]
+                #print(f"[DEBUG] Payload CANCELAR G/I: {json.dumps(payload, indent=2)}")
+            else:
+                if parts_code in parts and parts.get(parts_code, {}).get("gi_posted", False):
+                    print(f"[INFO] Peça {parts_code} já tem G/I postado. Ignorando.")
+                    continue
+                payload = payload_base.copy()
+                payload["PARTS_CODE"] = parts_code
+                payload["PARTS_QTY"] = str(used_parts_cos[parts_code]["quantidade"])
+                payload["SEQ_NO"] = parts.get(parts_code, {}).get("seq_no", "0001")
+                #print(f"[DEBUG] Payload POSTAR G/I: {json.dumps(payload, indent=2)}")
+
+            try:
+                print(f"[HTTP] Enviando requisição para {parts_code}...")
+                response = requests.post(url, headers=headers, cookies=cookies, data=payload, verify=False)
+                print(f"[HTTP] Status: {response.status_code}")
+                response_text = response.text.strip()
+                print(f"[HTTP] Resposta bruta (primeiros 300 chars): {response_text[:300]}")
+
+                if response_text.startswith("4e"):
+                    response_text = response_text[2:-1]
+
+                try:
+                    result = json.loads(response_text)
+                    print(f"[DEBUG] Resposta parseada: {json.dumps(result, indent=2)}")
+
+                    if (not result.get("success", False) and 
+                        result.get("message") == "[Error] Check D/O Balance Info." and 
+                        cancelar_gi is None):
+                        print(f"[WARN] Erro de D/O Balance para {parts_code}, vai para correção de delivery.")
+                        corrigir_delivery.append(parts_code)
+                        continue
+
+                    if result.get("success", False):
+                        action = "cancelado" if cancelar_gi is not None else "postado"
+                        print(f"[SUCESSO] G/I {action} para {parts_code} | Qtd: {payload['PARTS_QTY']} | SEQ_NO: {payload['SEQ_NO']}")
+                        local_gi_posted.append({
+                            "parts_code": parts_code,
+                            "quantity": payload["PARTS_QTY"],
+                            "gi_doc_no": result.get("giDocNo", ""),
+                            "seq_no": payload["SEQ_NO"]
+                        })
+                    else:
+                        print(f"[ERRO] Falha no G/I para {parts_code} -> {json.dumps(result)}")
+                        dados_full["error"] = json.dumps(result)
+                        return None, None
+                except json.JSONDecodeError as e:
+                    print(f"[ERRO] Falha ao parsear JSON para {parts_code} -> {str(e)}")
+                    dados_full["error"] = response_text
+                    return None, None
+
+            except requests.exceptions.RequestException as e:
+                print(f"[ERRO] Falha na requisição para {parts_code} -> {str(e)}")
+                dados_full["error"] = str(e)
+                return None, None
+
+        return local_gi_posted, corrigir_delivery
+
+    pecas_a_processar = cancelar_gi if cancelar_gi is not None else used_parts_cos.keys()
+
+    if not pecas_a_processar:
+        print("[INFO] Nenhuma peça para processar.")
+        dados_full["gi_posted"] = []
+        return dados_full
+    
+    print(f"[INFO] Iniciando processamento para {len(pecas_a_processar)} peças")
+
+    local_gi_posted, corrigir_delivery = tentar_postar_pecas(pecas_a_processar)
+    if local_gi_posted is None:
+        print("[ERRO] Erro crítico na primeira tentativa.")
+        return dados_full
+    gi_posted.extend(local_gi_posted)
+
+    tentativa = 1
+    max_tentativas = 3
+    while corrigir_delivery and cancelar_gi is None and tentativa <= max_tentativas:
+        print(f"[INFO] Tentativa {tentativa} de correção de delivery para {len(corrigir_delivery)} peças")
+        dados_full["parts_to_remove"] = [
+            {"codigo": code, "seq_no": parts[code]["seq_no"]}
+            for code in corrigir_delivery if code in parts
+        ]
+        dados_full["parts_to_add"] = [
+            {
+                "codigo": code,
+                "quantidade": used_parts_cos[code]["quantidade"],
+                "delivery": used_parts_cos[code].get("delivery", "")
+            }
+            for code in corrigir_delivery 
+            if code in used_parts_cos
+        ]
+        
+        if not remover_pecas_os(dados_full):
+            print("[ERRO] Falha ao remover peças.")
+            break
+        if not inserir_pecas_gspn(dados_full):
+            print("[ERRO] Falha ao inserir peças após remoção.")
+            break
+
+        dados_full.update(fetch_os_data(dados_full["object_id"]))
+        dados_full.update(extract_os_data_full(dados_full))
+        parts = dados_full.get("parts", {})
+
+        local_gi_posted, corrigir_delivery = tentar_postar_pecas(corrigir_delivery)
+        if local_gi_posted is None:
+            print(f"[ERRO] Falha crítica na tentativa {tentativa}.")
+            return dados_full
+        gi_posted.extend(local_gi_posted)
+        tentativa += 1
+    
+    if corrigir_delivery and tentativa > max_tentativas:
+        print(f"[WARN] Atingiu {max_tentativas} tentativas e ainda há peças sem G/I: {corrigir_delivery}")
+
+    dados_full["gi_posted"] = gi_posted
+    print(f"[INFO] Concluído! {len(gi_posted)} peças processadas com sucesso.")
+    return dados_full
+
+
+"""def manusear_gi(dados_full, cancelar_gi=None):
+    ""
+    Realiza o posting ou cancelamento de G/I para peças em used_parts_cos ou lista específica.
     
     Args:
         dados_full (dict): Dicionário contendo 'cookies', 'used_parts_cos', 'parts', 'in_out_wty' e outros dados.
@@ -805,7 +1004,7 @@ def manusear_gi(dados_full, cancelar_gi=None):
     
     Returns:
         dict: Dicionário dados_full atualizado com resultados ou erros detalhados.
-    """
+    ""
     logger = configurar_logger(dados_full.get('object_id'))
     #logger.debug(f"Início da função manusear_gi. Estado inicial de dados_full: {json.dumps(dados_full, indent=2, default=str)}")
     
@@ -1012,7 +1211,7 @@ def manusear_gi(dados_full, cancelar_gi=None):
 
     logger.info(f"Processamento de G/I concluído! {len(gi_posted)} peças processadas com sucesso.")
     #logger.debug(f"Estado final de dados_full: {json.dumps(dados_full, indent=2, default=str)}")
-    return dados_full
+    return dados_full"""
 
 def remover_pecas_os(dados_full):
     """
@@ -1046,7 +1245,7 @@ def remover_pecas_os(dados_full):
         logger.error(f"Erro ao montar payload base: {str(e)}")
         dados_full["error"] = f"Erro ao montar payload de deleção: {str(e)}"
         #logger.debug(f"Estado de dados_full após erro: {json.dumps(dados_full, indent=2, default=str)}")
-        return dados_full
+        return False
 
     cancelar_gi = []
     for part in parts_to_remove:
@@ -1068,7 +1267,7 @@ def remover_pecas_os(dados_full):
             logger.error(f"Erro ao recarregar dados após cancelar G/I: {str(e)}")
             dados_full["error"] = f"Erro ao recarregar dados após cancelar G/I: {str(e)}"
             #logger.debug(f"Estado de dados_full após erro: {json.dumps(dados_full, indent=2, default=str)}")
-            return dados_full
+            return False
 
     for part in parts_to_remove:
         codigo = part.get('codigo')
@@ -1104,7 +1303,7 @@ def remover_pecas_os(dados_full):
             logger.error(f"Erro na requisição para remover {codigo} (seq_no: {seq_no}): {str(e)}")
             dados_full["error"] = f"Erro ao remover peça {codigo}: {str(e)}"
             #logger.debug(f"Estado de dados_full após erro: {json.dumps(dados_full, indent=2, default=str)}")
-            return dados_full
+            return False
 
     try:
         resultado_fetch = fetch_os_data(dados_full['object_id'])
@@ -1115,7 +1314,7 @@ def remover_pecas_os(dados_full):
         logger.error(f"Erro ao recarregar dados após remover peças: {str(e)}")
         dados_full["error"] = f"Erro ao recarregar dados após remover peças: {str(e)}"
         #logger.debug(f"Estado de dados_full após erro: {json.dumps(dados_full, indent=2, default=str)}")
-        return dados_full
+        return False
 
     logger.info("Todas as peças desnecessárias foram removidas com sucesso!")
     #logger.debug(f"Estado final de dados_full: {json.dumps(dados_full, indent=2, default=str)}")

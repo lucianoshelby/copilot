@@ -15,7 +15,7 @@ import requests
 import json
 import os
 
-def fetch_os_data(object_id):
+def fetch_os_data(object_id, cookies=obter_cookies_validos_recentes(), inss=None):
     """
     Baixa o HTML da Ordem de Serviço do GSPN e inicializa o dicionário dados_full.
     
@@ -49,13 +49,14 @@ def fetch_os_data(object_id):
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
     }
 
-    cookies = obter_cookies_validos_recentes()
+    
     #cookies = {cookie["name"]: cookie["value"] for cookie in cookies_full}
     dados_full['cookies'] = cookies  # Adiciona os cookies ao dicionário
     #print("Cookies obtidos:", cookies)
     # Payload para buscar a OS
     payload = {"cmd": "ZifGspnSvcMainLDCmd", "objectID": object_id}
-
+    if inss:
+        payload = {"cmd": "ServiceOrderDetailLiteCmd", "objectID": object_id, "relatedTicketFlag": "Y"}
     # Faz a requisição
     try:
         response = requests.get(url, headers=headers, cookies=cookies, params=payload, verify=False)
@@ -761,11 +762,7 @@ def coletar_pecas_gspn_total(dados_full):
 
 if __name__ == "__main__":
     # Exemplo de uso
-    html_os = fetch_os_data('4172792566')
+    html_os = fetch_os_data(object_id='4173027628', inss=True)
     dados_full = html_os
-    dados_extraidos = extract_os_data_full(dados_full)
-    dados_full.update(dados_extraidos)
-    dados_full['parts'] = {'GH97-29540A': {'quantity': '1', 'delivery': '', 'gi_posted': False, 'description': 'MEA ANTENNA-MID;SM-S928U,EUB,EUR,BLACK', 'request_no': '2349821653', 'seq_no': '0001', 'gi_date': ''}, 'GH97-29538A': {'quantity': '1', 'delivery': '', 'gi_posted': False, 'description': 'MEA REAR-TOP_S928U;SM-S928U,VZW,US', 'request_no': '2349821655', 'seq_no': '0002', 'gi_date': ''}, 'GH96-16577A': {'quantity': '1', 'delivery': '', 'gi_posted': False, 'description': 'ASSY STYLUS PEN-ZT_S928U;SM-S928U,VZW,LI', 'request_no': '2349821488', 'seq_no': '0003', 'gi_date': ''}, 'GH96-16562A': {'quantity': '1', 'delivery': '', 'gi_posted': False, 'description': 'ASSY SPEAKER-BOTTOM_S928U;1410,2.25mm,1.', 'request_no': '2349821656', 'seq_no': '0004', 'gi_date': ''}, 'GH96-16497A': {'quantity': '1', 'delivery': '', 'gi_posted': False, 'description': 'IF SUB PBA ASSY-SM_S928B;SM-S928B,EUB,VM', 'request_no': '2349821659', 'seq_no': '0005', 'gi_date': ''}, 'GH96-16305A': {'quantity': '1', 'delivery': '', 'gi_posted': False, 'description': 'ASSY CAMERA-TELE X3_S928U;SM-S928U,US,12', 'request_no': '2349821489', 'seq_no': '0006', 'gi_date': ''}, 'GH96-16303A': {'quantity': '1', 'delivery': '', 'gi_posted': False, 'description': 'ASSY CAMERA-WIDE_S928B;SM-S928B,EUR,200M', 'request_no': '2349821490', 'seq_no': '0007', 'gi_date': ''}, 'GH96-16302A': {'quantity': '1', 'delivery': '', 'gi_posted': False, 'description': 'ASSY CAMERA-TELE X5_S928B;SM-S928B,EUR,5', 'request_no': '2349821491', 'seq_no': '0008', 'gi_date': ''}, 'GH96-16299A': {'quantity': '1', 'delivery': '', 'gi_posted': False, 'description': 'ASSY VT CAMERA-1/3.2', 'request_no': '2349821492', 'seq_no': '0009', 'gi_date': ''}, 'GH96-15527A': {'quantity': '1', 'delivery': '', 'gi_posted': False, 'description': 'ASSY CAMERA-UW_S918U;SM-S918U,US,12M AF,', 'request_no': '2349821493', 'seq_no': '0010', 'gi_date': ''}, 'GH82-33544A': {'quantity': '1', 'delivery': '', 'gi_posted': False, 'description': 'A/S REPAIR KIT-OLED(COMM),SM-S928;SM-S92', 'request_no': '2349821494', 'seq_no': '0011', 'gi_date': ''}, 'GH82-33530A': {'quantity': '1', 'delivery': '', 'gi_posted': False, 'description': 'SVC PBA-MAIN(COMM)SM-S928BE_12+256GB,MEA', 'request_no': '2349821496', 'seq_no': '0012', 'gi_date': ''}, 'GH82-33391A': {'quantity': '1', 'delivery': '', 'gi_posted': False, 'description': 'SVC IF PBA-IF FPCB PREBENDING,SM-S928;SM', 'request_no': '2349821498', 'seq_no': '0014', 'gi_date': ''}, 'GH82-33390A': {'quantity': '1', 'delivery': '', 'gi_posted': False, 'description': 'SVC IF PBA-UB FPCB PREBENDING,SM-S928;SM', 'request_no': '2349821500', 'seq_no': '0015', 'gi_date': ''}, 'GH82-33387A': {'quantity': '1', 'delivery': '', 'gi_posted': False, 'description': 'SVC BATT ASSY-EB-BS928ABY,4855,30,S928;S', 'request_no': '2349821502', 'seq_no': '0016', 'gi_date': ''}, 'GH59-15734A': {'quantity': '1', 'delivery': '', 'gi_posted': False, 'description': 'CON TO CON FPCB-FRC_S928U;SM-S928U,S1000', 'request_no': '2349821504', 'seq_no': '0018', 'gi_date': ''}}
 
-    resultado = coletar_pecas_gspn_total(dados_full)
-    print(resultado)
+    print(html_os)

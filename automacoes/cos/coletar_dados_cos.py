@@ -36,8 +36,8 @@ def obter_os_correspondentes(os_input):
         str or None: O número da OS correspondente ou None em caso de erro.
     """
     # 📌 Verifica o comprimento da entrada
-    if len(os_input) not in (6, 10):
-        print(f"❌ Entrada inválida! A OS deve ter 6 (COS) ou 10 (GSPN) caracteres. Recebido: {len(os_input)}")
+    if len(os_input) not in (6, 10, 11):
+        print(f"❌ Entrada inválida! A OS deve ter 6 (COS), 10 (GSPN) ou 11 (Serial) caracteres. Recebido: {len(os_input)}")
         return None
 
     # 📌 Determina a direção da consulta
@@ -45,6 +45,10 @@ def obter_os_correspondentes(os_input):
 
         params_key = "OSFabricante"
         params_value = f"OSFabricante={os_input}"
+        return_key = "NumeroOS"
+    elif len(os_input) == 11:
+        params_key = "Serial"
+        params_value = f"Serial='{os_input}'"
         return_key = "NumeroOS"
     else:  # len(os_input) == 6
 
@@ -95,7 +99,7 @@ def obter_os_correspondentes(os_input):
                     return None
                 
                 
-                print(f"✅ OS correspondente encontrada: {os_correspondente}")
+                #print(f"✅ OS correspondente encontrada: {os_correspondente}")
 
                 return os_correspondente
             else:
@@ -118,6 +122,7 @@ def coletar_dados_os(os_numero):
     print(f"🔍 Buscando dados da OS: {os_numero}")
     dados_os = {
         "status_os": "Não encontrado",
+        "descricao_status": "Vazio",
         "tipo_atendimento": "Não encontrado",
         "pecas_requisitadas": [],
         "pecas_gspn": [],
@@ -140,6 +145,7 @@ def coletar_dados_os(os_numero):
             os_dados = dados_json.get("OrdemServicoEdicao", {})
             if os_dados:
                 dados_os["status_os"] = os_dados.get("DescricaoStatus", "Não encontrado")
+                dados_os["descricao_status"] = os_dados.get("DescricaoMotivo", "Não encontrado")
                 dados_os["tipo_atendimento"] = os_dados.get("DescricaoAtendimento", "Não encontrado")
                 dados_os["tecnico"] = os_dados.get("NomeTecnico")
                 dados_os["data_entrada"] = os_dados.get("DataEntrada", "Não encontrado")
@@ -164,20 +170,28 @@ def coletar_dados_os(os_numero):
     # ✅ Buscar Peças Requisitadas
     url_pecas_req = f"{URL_BASE}/ControleEstoque?Acao=BuscarDadosRequisicaoEstoquePorOS&NumeroOS={os_numero}"
     response_pecas_req = session.get(url_pecas_req, headers=HEADERS, cookies=session.cookies, verify=False)
-    
+
+    # Verifica se a resposta é válida (não vazia)
     if '{"ListaEstoque":null}' not in response_pecas_req.text:
         try:
             dados_json = response_pecas_req.json()
-            lista_requisicoes = dados_json.get("ListaEstoque", [])
-            for requisicao in lista_requisicoes:
-                lista_pecas = requisicao.get("ListaPecas", None)
-                if lista_pecas:
-                    for peca in lista_pecas:
-                        dados_os["pecas_requisitadas"].append({
-                            "codigo": peca["CodigoPeca"],
-                            "descricao": peca["DescricaoPeca"],
-                            "qtd": peca["QtdPeca"]
-                        })
+            requisicoes = dados_json.get("ListaEstoque", [])
+
+            for requisicao in requisicoes:
+                descricao_status = requisicao.get("DescricaoStatus", "Desconhecido")
+                 # Ignora requisições com status "Cancelado"
+                if descricao_status == "Cancelado":
+                    continue
+                lista_pecas = requisicao.get("ListaPecas", [])
+
+                for peca in lista_pecas:
+                    dados_os["pecas_requisitadas"].append({
+                        "codigo": peca.get("CodigoPeca", ""),
+                        "descricao": peca.get("DescricaoPeca", ""),
+                        "qtd": peca.get("QtdPeca", ""),
+                        "status": descricao_status  # Incluindo o DescricaoStatus da requisição
+                    })
+
         except json.JSONDecodeError:
             print("⚠️ Erro ao processar JSON de peças requisitadas.")
 
@@ -520,9 +534,14 @@ def coletar_usadas_cos(dados_full):
     Returns:
         dict: Dicionário dados_full atualizado com 'used_parts_cos'.
     """
-    # Extrai o número da OS de dados_full
-    os_cos = dados_full.get("object_id")
-    
+    if isinstance(dados_full, str):
+        os_cos = dados_full
+        dados_full = {"object_id": os_cos}
+    elif isinstance(dados_full, dict):
+        os_cos = dados_full.get("object_id")
+    else:
+        raise TypeError("dados_full deve ser um dicionário ou uma string")
+    #dados_full={}
     if not os_cos:
         dados_full["error"] = "Número da OS (object_id) não encontrado em dados_full"
         return dados_full
@@ -554,7 +573,7 @@ def coletar_usadas_cos(dados_full):
         } for codigo, quantidade in contador_pecas.items()
     }
     
-    
+    #print(resultado_final)
 
     # Incrementa o resultado em dados_full
     dados_full["used_parts_cos"] = resultado_final
@@ -898,5 +917,14 @@ def obter_ids_requisicoes_pendentes(numero_os: str) -> Optional[List[str]]:
 
 if __name__ == "__main__":
     # Exemplo de uso
-    dados_os = coletar_dados_os("329230")
-    print(dados_os)
+    os = '363377'
+
+    #dados = coletar_dados_os(os)
+    #print(f'Dados coletados: {dados}')
+    dados = coletar_dados_os(os)
+    pecas = dados#.get("used_parts_cos", {})
+    print('Peças usadas: ')
+    for chave, valor in pecas.items():
+        
+        print(f'{chave}: {valor}')
+    

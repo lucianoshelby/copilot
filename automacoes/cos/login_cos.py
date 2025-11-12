@@ -168,7 +168,7 @@ def carregar_sessao(nome_usuario):
     if carregar_cookies(session, nome_usuario):
         # 2. Se carregou, testar se a sessão ainda é válida
         if testar_sessao(session):
-            logging.info(f"✅ Sessão carregada e validada com sucesso para '{nome_usuario}'.")
+            #logging.info(f"✅ Sessão carregada e validada com sucesso para '{nome_usuario}'.")
             return session
         else:
             logging.warning(f"⚠️ Cookies carregados para '{nome_usuario}', mas a sessão está inválida/expirada. Tentando novo login...")

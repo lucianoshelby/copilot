@@ -1,4 +1,0 @@
-ae
-{"message":"[GCIC] Created New job.","error":false,"returncode":"0","SOLASTCHANGEDDATE":"","returnObjectID":"4172879968","SOLASTCHANGEDTIME":"","EtErrInfo":[],"success":true}
-0
-

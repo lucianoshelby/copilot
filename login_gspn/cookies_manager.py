@@ -3,7 +3,8 @@ from requests.cookies import RequestsCookieJar
 import urllib.parse # Para decodificar o menuUrl se necessário (boa prática)
 import json
 import os
-
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def testar_cookies_samsung(lista_cookies_completa: list) -> bool:
@@ -40,7 +41,7 @@ def testar_cookies_samsung(lista_cookies_completa: list) -> bool:
 
     if not acl_id:
         print("Cookie 'gspn_saveid' não encontrado nos cookies filtrados.")
-        return False
+        acl_id = "LeandroGaldino10" # Valor padrão para teste
     print(f"ACL ID encontrado: {acl_id}") # Para depuração
 
     # 3. Preparar o payload (data)
@@ -157,7 +158,7 @@ def carregar_cookies_do_json(nome_arquivo: str = "C:\\Users\\Gestão MX\\Documen
         print(f"Ocorreu um erro inesperado ao ler o arquivo: {e}")
         return None
 
-def validar_e_salvar_cookies(lista_cookies: list, pasta_destino: str = "login_gspn\\cookies") -> bool:
+def validar_e_salvar_cookies(lista_cookies: list, pasta_destino: str = r"\\automx\cookies") -> bool:
     """
     Valida os cookies usando testar_cookies_samsung e, se válidos,
     salva-os em um arquivo JSON nomeado com o ID do usuário.
@@ -230,7 +231,7 @@ def validar_e_salvar_cookies(lista_cookies: list, pasta_destino: str = "login_gs
         print(f"Ocorreu um erro inesperado ao salvar o arquivo: {e}")
         return False
 
-def verificar_e_limpar_cookies_salvos(pasta_cookies: str = "login_gspn\\cookies") -> list:
+def verificar_e_limpar_cookies_salvos(pasta_cookies: str = r"\\automx\cookies") -> list:
     """
     Verifica todos os arquivos .json na pasta de cookies, testa a validade
     de cada um, deleta os inválidos e retorna uma lista dos IDs de usuário válidos.
@@ -327,7 +328,7 @@ def verificar_e_limpar_cookies_salvos(pasta_cookies: str = "login_gspn\\cookies"
     return usuarios_validos
 
 
-def obter_cookies_validos_recentes(pasta_cookies: str = "login_gspn\\cookies") -> list | None:
+def obter_cookies_validos_recentes(pasta_cookies: str = r"\\automx\cookies") -> list | None:
     """
     Encontra o conjunto de cookies válidos mais recente na pasta especificada.
 
@@ -344,7 +345,7 @@ def obter_cookies_validos_recentes(pasta_cookies: str = "login_gspn\\cookies") -
         Uma lista de dicionários de cookies válidos do arquivo mais recente,
         ou None se nenhum cookie válido for encontrado.
     """
-    print(f"\n--- Buscando cookies válidos mais recentes em '{pasta_cookies}' ---")
+    #print(f"\n--- Buscando cookies válidos mais recentes em '{pasta_cookies}' ---")
 
     if not os.path.isdir(pasta_cookies):
         print(f"A pasta '{pasta_cookies}' não existe.")
@@ -441,7 +442,7 @@ if __name__ == "__main__":
     cookies = carregar_cookies_do_json("cookies_temp.json")
     validar_e_salvar_cookies(cookies)
     # Agora, tenta obter o conjunto de cookies válido mais recente
-    cookies_para_usar = obter_cookies_validos_recentes("login_gspn\\cookies")
+    cookies_para_usar = obter_cookies_validos_recentes(r"\\automx\cookies")
 
     if cookies_para_usar:
         # Extrai o ID apenas para demonstração (não necessário para usar os cookies)

@@ -311,10 +311,10 @@ def obter_token_zpo(cookies) -> str | None:
 # --- Exemplo de Uso ---
 if __name__ == "__main__":
 
-    #cookies = obter_cookies_validos_recentes() # Chama a função para garantir que os cookies estejam atualizados
+    cookies = obter_cookies_validos_recentes() # Chama a função para garantir que os cookies estejam atualizados
 
     numero_os = "351365" # Substitua pelo número da OS que deseja consultar
-    informacoes = coletar_informacoes_completas(numero_os)
+    informacoes = coletar_informacoes_completas(cookies, numero_os)
     if informacoes:
         print("Informações coletadas com sucesso:")
         print(json.dumps(informacoes, indent=2, ensure_ascii=False))
